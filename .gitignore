@@ -1,0 +1,12 @@
+# InSpec / cinc-auditor artefacts
+vendor/
+*.lock
+*.json.lock
+hdf.json
+hdf-*.json
+inspec.tar.gz
+
+# Local dev
+.bundle/
+.DS_Store
+*.swp
