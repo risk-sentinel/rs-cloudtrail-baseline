@@ -1,0 +1,57 @@
+# Consumer inputs for cis-cloudtrail.
+#
+# Override values per-environment via:
+#   cinc-auditor exec profiles/cis-cloudtrail \
+#     --input-file profiles/cis-cloudtrail/inputs.yml
+# or individually via --input name=value
+#
+# All inputs have sensible defaults — see inspec.yml for the catalogue
+# (types, defaults, per-value behaviour). Real consumer overlays exist
+# at `examples/sparc.inputs.yml` as a starting template.
+
+# ----- AWS partition -----
+# 'aws' for Commercial (default), 'aws-us-gov' for GovCloud non-DoD.
+aws_partition: aws
+
+# ----- Region scope -----
+# Default [] discovers regions dynamically via ec2:DescribeRegions
+# (auto-narrows to the target partition). Pin to an allowlist for
+# faster scans, but be aware that excluded regions won't be checked.
+# scan_regions:
+#   - us-east-1
+#   - us-west-2
+
+# ----- Theme 1 + 4 — delivery freshness -----
+# Maximum age in hours of LatestDeliveryTime / LatestCloudWatchLogsDeliveryTime.
+# Default 24h. Tighten for production fidelity; loosen for sandbox / dev.
+# trail_delivery_recency_hours: 24
+
+# ----- Theme 2.2 — approved log-archive bucket allowlist -----
+# Empty default skips C-CT-2.2 with attestation rationale. Populate with
+# the consumer's centralized log-archive bucket name(s) to enforce.
+# approved_trail_buckets:
+#   - sparc-prod-log-archive
+#   - sparc-prod-log-archive-replica
+
+# ----- Theme 3.2 — required S3 data event bucket ARNs -----
+# Empty default skips C-CT-3.2 with attestation rationale. Populate with
+# the bucket ARNs whose object-level events MUST be captured by at least
+# one trail (either per-bucket DataResource or wildcard 'arn:aws:s3:::').
+# required_data_event_bucket_arns:
+#   - "arn:aws:s3:::sparc-prod-data"
+#   - "arn:aws:s3:::sparc-prod-evidence"
+
+# ----- Theme 4.2 — CWL retention floor -----
+# Minimum CloudWatch Logs log-group retention (days). Default 365.
+# AWS's "Never expire" is accepted regardless. Set to 0 to disable the floor.
+# cwl_retention_min_days: 365
+
+# ----- Theme 5.3 — trail bucket lifecycle floor -----
+# Maximum days-to-Glacier transition for the trail bucket. Default 90.
+# trail_bucket_glacier_transition_days: 90
+
+# ----- C-CT-2.3 — Organizations API attestation reference -----
+# Surfaces verbatim in the attestation skip rationale when the scan can't
+# reach Organizations:ListAccounts (e.g., scan running from a workload
+# account, not the management account). Free-form: doc path / URL / ticket.
+# organizations_attestation_reference: ''

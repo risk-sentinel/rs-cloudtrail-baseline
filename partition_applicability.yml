@@ -1,0 +1,101 @@
+# Per-control partition applicability — auditor-facing flat table.
+# Values per partition: applicable | not_applicable | partial
+# `reason` is required when not_applicable or partial.
+# Keep this file in sync with `tag applicable_partitions:` on each control.
+#
+# All cis-cloudtrail controls target both AWS Commercial and
+# AWS GovCloud non-DoD. CloudTrail, S3, KMS, CloudWatch Logs, and AWS
+# Organizations are all available in both partitions; partition-specific
+# behaviour (e.g., S3 Object Lock GA dates, Insight events) is documented
+# per-control where it matters.
+
+controls:
+  - id: CT-1.1
+    title: "Trail is_logging == true"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-1.2
+    title: "Trail latest delivery error empty + recent"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-1.3
+    title: "Trail digest delivery error empty"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-2.1
+    title: "Organization trail exists"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-2.2
+    title: "Org-trail bucket in approved log-archive allowlist"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-2.3
+    title: "Org-trail member coverage matches Organizations enumeration"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-3.1
+    title: "Lambda invoke data events captured"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-3.2
+    title: "S3 data events scoped to required-bucket-list"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-3.3
+    title: "Insight events enabled"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-4.1
+    title: "Trail has CloudWatch Logs group + role ARNs"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-4.2
+    title: "CWL log group retention >= threshold"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-4.3
+    title: "Latest CWL delivery time recent"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-5.1
+    title: "Trail bucket has Object Lock enabled"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-5.2
+    title: "Trail bucket policy denies non-TLS PUT"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
+
+  - id: CT-5.3
+    title: "Trail bucket lifecycle transitions to Glacier"
+    aws: applicable
+    aws-us-gov: applicable
+    reason: ''
