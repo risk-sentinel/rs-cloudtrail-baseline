@@ -2,7 +2,7 @@
 
 Tier-2 baseline for AWS CloudTrail covering surfaces beyond `cis-aws-foundations §4`. Targets AWS Commercial (`aws`) and AWS GovCloud non-DoD (`aws-us-gov`). Per-control partition applicability is documented in [`partition_applicability.yml`](partition_applicability.yml) and encoded as `tag applicable_partitions:`.
 
-Risk-Sentinel-attributed and consumer-agnostic, consistent with the rest of the `cis-*` profiles in this repo. The SPARC consumer overlay lives at [`examples/sparc.inputs.yml`](examples/sparc.inputs.yml). Renamed from `sparc-cloudtrail-baseline` (#11) to `cis-cloudtrail` (#77) before the v0.1.0 tag — the legacy name is gone, no shim.
+Risk-Sentinel-attributed and consumer-agnostic, consistent with the rest of the `cis-*` profiles in this repo. The the consumer consumer overlay lives at [`examples/sparc.inputs.yml`](examples/sparc.inputs.yml). Renamed from `sparc-cloudtrail-baseline` (#11) to `cis-cloudtrail` (#77) before the v0.1.0 tag — the legacy name is gone, no shim.
 
 ## Themes
 

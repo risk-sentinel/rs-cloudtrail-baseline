@@ -1,0 +1,103 @@
+name: cis-cloudtrail
+title: AWS CloudTrail Extended Baseline
+maintainer: Risk Sentinel
+copyright: Risk Sentinel
+copyright_email: support@risk-sentinel.org
+license: Apache-2.0
+summary: |
+  Tier-2 baseline for AWS CloudTrail covering surfaces beyond
+  cis-aws-foundations §4. Targets AWS Commercial (aws) and AWS GovCloud
+  non-DoD (aws-us-gov). Per-control partition applicability is documented
+  in partition_applicability.yml and encoded as `tag applicable_partitions:`.
+  Five themes:
+    1. Trail health (is_logging + delivery freshness, beyond mere existence)
+    2. Multi-account aggregation (organization trails + log-archive bucket
+       provenance)
+    3. Deeper event selectors (Lambda data events, scoped S3 data events,
+       Insight events)
+    4. CloudWatch Logs integration (log group + role + retention + delivery)
+    5. Trail-bucket tamper resistance (Object Lock + TLS-deny + lifecycle)
+version: 0.1.0
+inspec_version: '>= 5.0'
+
+inputs:
+  - name: aws_partition
+    type: string
+    value: aws
+    description: >-
+      AWS partition the scan is running against.
+      One of: aws (Commercial), aws-us-gov (GovCloud non-DoD).
+
+  - name: scan_regions
+    type: array
+    value: []
+    description: >-
+      Explicit region allowlist for region-scoped checks. Empty (default)
+      = dynamic discovery via compute_client.describe_regions — auto-
+      narrows to the target partition. Trade-off: a narrow allowlist
+      will NOT catch drift in excluded regions.
+
+  - name: trail_delivery_recency_hours
+    type: numeric
+    value: 24
+    description: >-
+      Maximum age (in hours) of `LatestDeliveryTime` /
+      `LatestCloudWatchLogsDeliveryTime` for a trail to be considered
+      healthy (Theme 1 + Theme 4). Default 24h. Tighten for high-fidelity
+      environments; loosen for sandbox / dev where activity is bursty.
+
+  - name: approved_trail_buckets
+    type: array
+    value: []
+    description: >-
+      Allowlist of S3 bucket names approved as CloudTrail destinations
+      (Theme 2 — log-archive provenance). Default [] skips C-CT-2.2 with
+      attestation rationale; populate with the consumer's centralized
+      log-archive bucket name(s) to enforce.
+
+  - name: required_data_event_bucket_arns
+    type: array
+    value: []
+    description: >-
+      Required-bucket-ARN list for S3 data events (Theme 3.2). Default []
+      skips C-CT-3.2 with attestation rationale. When populated, at least
+      one trail must record S3 data events for every listed bucket ARN
+      (either explicitly via per-bucket DataResource or via the
+      'arn:aws:s3:::' wildcard).
+
+  - name: cwl_retention_min_days
+    type: numeric
+    value: 365
+    description: >-
+      Minimum CloudWatch Logs log-group retention (days) for the trail's
+      CWL destination (Theme 4.2). Default 365. AWS's "Never expire"
+      retention is accepted regardless of threshold. Set to 0 to disable
+      the floor and accept any positive retention.
+
+  - name: trail_bucket_glacier_transition_days
+    type: numeric
+    value: 90
+    description: >-
+      Maximum days-to-Glacier-or-Deep-Archive transition for the trail
+      bucket's lifecycle rule (Theme 5.3). Default 90. The bucket must
+      have at least one lifecycle rule with a Transition action moving
+      objects to GLACIER / GLACIER_IR / DEEP_ARCHIVE within the threshold.
+
+  - name: organizations_attestation_reference
+    type: string
+    value: ''
+    description: >-
+      Free-form reference (doc path / URL / ticket ID) describing how
+      organization-trail member coverage is satisfied when running from
+      a workload account that lacks Organizations:ListAccounts. Surfaces
+      verbatim in C-CT-2.3's attestation skip rationale so auditors can
+      trace the attestation source.
+
+supports:
+  - platform: aws
+
+depends:
+  - name: inspec-aws
+    git: https://github.com/inspec/inspec-aws.git
+    branch: main
+    # TODO: pin to a tag after first green CI run.
