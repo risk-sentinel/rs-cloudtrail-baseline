@@ -28,6 +28,7 @@
 vendor_patterns = [
   File.join(Dir.pwd, "vendor", "*", "libraries"),
   File.join(Dir.pwd, "profiles", "*", "vendor", "*", "libraries"),
+  File.join(Dir.pwd, "overlays", "*", "vendor", "*", "libraries"),
 ]
 vendor_patterns.flat_map { |p| Dir.glob(p) }.uniq.each do |dir|
   $LOAD_PATH.unshift(dir) unless $LOAD_PATH.include?(dir)
