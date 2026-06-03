@@ -49,14 +49,38 @@ control 'C-CT-2.3' do
   membership = aws_organization_member_coverage
 
   if membership.connection_error
-    attestation_ref = input('organizations_attestation_reference').to_s
-    attestation_msg = "attestation-required: organizations:ListAccounts unreachable from this account " \
-                      "(#{membership.connection_error}). Consumer attests separately to organization-trail " \
-                      "member-coverage review."
-    attestation_msg += " Reference: #{attestation_ref}." unless attestation_ref.empty?
+    # organizations:ListAccounts is unreachable from this (workload) account.
+    # The automated path above runs from the management account; here we lift
+    # the fallback from a bare Skip to Pass-with-evidence via document_attestation
+    # (sparc-validate#115): assert the member-coverage review attestation exists
+    # and is current. If no attestation URI is configured we preserve the prior
+    # Skip-with-rationale behavior so existing consumers aren't broken.
+    attestation_uri = input('c_ct_2_3_attestation_uri', value: '')
+    max_age_days    = input('c_ct_2_3_attestation_max_age_days', value: 365)
 
-    describe 'Organization member-account coverage (workload-account fallback)' do
-      skip attestation_msg
+    if attestation_uri.to_s.empty?
+      attestation_ref = input('organizations_attestation_reference').to_s
+      attestation_msg = "attestation-required: organizations:ListAccounts unreachable from this account " \
+                        "(#{membership.connection_error}). Set c_ct_2_3_attestation_uri to lift this to " \
+                        "Pass-with-evidence, or attest separately to organization-trail member-coverage review."
+      attestation_msg += " Reference: #{attestation_ref}." unless attestation_ref.empty?
+
+      describe 'Organization member-account coverage (workload-account fallback)' do
+        skip attestation_msg
+      end
+    else
+      doc = document_attestation(attestation_uri, max_age_days: max_age_days)
+      describe "C-CT-2.3 organization member-coverage attestation (#{attestation_uri})" do
+        it 'is reachable (no connection error)' do
+          expect(doc.connection_error).to be_nil, "attestation unreachable: #{doc.connection_error}"
+        end
+        it 'exists' do
+          expect(doc.exists?).to eq(true)
+        end
+        it "is current within #{max_age_days} days" do
+          expect(doc.current?).to eq(true)
+        end
+      end
     end
   else
     describe membership do
