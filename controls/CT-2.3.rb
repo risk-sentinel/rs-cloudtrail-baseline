@@ -55,22 +55,30 @@ control 'C-CT-2.3' do
     # (sparc-validate#115): assert the member-coverage review attestation exists
     # and is current. If no attestation URI is configured we preserve the prior
     # Skip-with-rationale behavior so existing consumers aren't broken.
-    attestation_uri = input('c_ct_2_3_attestation_uri', value: '')
-    max_age_days    = input('c_ct_2_3_attestation_max_age_days', value: 365)
+    # This member-coverage review is a `boundary`-class document (the boundary's
+    # own periodic review). The URI defaults via attestation_uri(:boundary, …),
+    # which resolves against boundary_docs_base and returns '' when that base is
+    # unset — so an unconfigured consumer SKIPs (and can still `saf attest apply`
+    # downstream) rather than failing (sparc-validate#154). A per-control
+    # override (c_ct_2_3_attestation_uri) still wins. Local var is `uri` to avoid
+    # shadowing the attestation_uri helper method.
+    uri          = input('c_ct_2_3_attestation_uri', value: attestation_uri(:boundary, 'C-CT-2.3'))
+    max_age_days = input('c_ct_2_3_attestation_max_age_days', value: 365)
 
-    if attestation_uri.to_s.empty?
+    if uri.to_s.empty?
       attestation_ref = input('organizations_attestation_reference').to_s
       attestation_msg = "attestation-required: organizations:ListAccounts unreachable from this account " \
-                        "(#{membership.connection_error}). Set c_ct_2_3_attestation_uri to lift this to " \
-                        "Pass-with-evidence, or attest separately to organization-trail member-coverage review."
+                        "(#{membership.connection_error}). Set boundary_docs_base / c_ct_2_3_attestation_uri " \
+                        "to lift this to Pass-with-evidence, or supply a CMS-pattern attestation via " \
+                        "`saf attest apply` for the organization-trail member-coverage review."
       attestation_msg += " Reference: #{attestation_ref}." unless attestation_ref.empty?
 
       describe 'Organization member-account coverage (workload-account fallback)' do
         skip attestation_msg
       end
     else
-      doc = document_attestation(attestation_uri, max_age_days: max_age_days)
-      describe "C-CT-2.3 organization member-coverage attestation (#{attestation_uri})" do
+      doc = document_attestation(uri, max_age_days: max_age_days)
+      describe "C-CT-2.3 organization member-coverage attestation (#{uri})" do
         it 'is reachable (no connection error)' do
           expect(doc.connection_error).to be_nil, "attestation unreachable: #{doc.connection_error}"
         end

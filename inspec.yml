@@ -93,17 +93,46 @@ inputs:
       verbatim in C-CT-2.3's attestation skip rationale so auditors can
       trace the attestation source.
 
-  # ---- document_attestation evidence URI (sparc-validate#115) ----
+  # ---- document_attestation evidence-class bases (sparc-validate#154) ----
+  # Three evidence classes, each with its own base location + a provider
+  # inferred from the base's URI scheme. The per-profile helper
+  # (_attestation_helpers.rb) composes attestation_uri(:class, 'name') ->
+  # "<base>/<name>.<ext>"; an UNSET base resolves to '' -> the control SKIPs
+  # (stays saf attest apply-able). A per-control *_attestation_uri override
+  # still wins. Providers: s3:// https:// github://owner/repo/path[@ref]
+  # gitlab://<enc-project>/path[@ref] file:///path
+  - name: leveraged_evidence_base
+    type: string
+    value: ''
+    description: >-
+      Base location of leveraged-SYSTEM authorizations the boundary inherits
+      (AWS FedRAMP / SOC 2 / ISO). WORM; one doc <- many controls. Maps to
+      `inherited` controls (none in this profile today).
+  - name: policy_provider_base
+    type: string
+    value: ''
+    description: >-
+      Base location of policy-PROVIDER documents the boundary leverages
+      (shared / templated / parent-org policies) — a separate location from
+      the boundary's own docs.
+  - name: boundary_docs_base
+    type: string
+    value: ''
+    description: >-
+      Base location of the boundary system's OWN governance docs (CP, DRP,
+      IRP, periodic-review records). Maps to boundary-specific controls
+      (e.g. C-CT-2.3's member-coverage review).
+
+  # ---- per-control document_attestation override (sparc-validate#115/#154) ----
   - name: c_ct_2_3_attestation_uri
     type: string
     value: ''
     description: >-
-      URI (s3://, https://, or file://) of the organization-trail
-      member-coverage review attestation. Checked via the
-      document_attestation resource: when organizations:ListAccounts is
-      unreachable (workload account) and this is set, C-CT-2.3 PASSES if the
-      document exists and is current, instead of skipping. Empty preserves the
-      prior Skip-with-rationale fallback.
+      Override URI of the organization-trail member-coverage review
+      attestation. When organizations:ListAccounts is unreachable (workload
+      account), C-CT-2.3 checks this via document_attestation: PASSES if the
+      document exists and is current. Empty -> resolves via boundary_docs_base
+      (attestation_uri(:boundary, 'C-CT-2.3')); SKIPs if that is also unset.
   - name: c_ct_2_3_attestation_max_age_days
     type: numeric
     value: 365
