@@ -93,6 +93,23 @@ inputs:
       verbatim in C-CT-2.3's attestation skip rationale so auditors can
       trace the attestation source.
 
+  # ---- document_attestation evidence URI (sparc-validate#115) ----
+  - name: c_ct_2_3_attestation_uri
+    type: string
+    value: ''
+    description: >-
+      URI (s3://, https://, or file://) of the organization-trail
+      member-coverage review attestation. Checked via the
+      document_attestation resource: when organizations:ListAccounts is
+      unreachable (workload account) and this is set, C-CT-2.3 PASSES if the
+      document exists and is current, instead of skipping. Empty preserves the
+      prior Skip-with-rationale fallback.
+  - name: c_ct_2_3_attestation_max_age_days
+    type: numeric
+    value: 365
+    description: >-
+      Staleness window (days) for the C-CT-2.3 member-coverage attestation.
+
 supports:
   - platform: aws
 

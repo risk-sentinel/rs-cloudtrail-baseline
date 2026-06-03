@@ -36,6 +36,7 @@ See [`inputs.yml`](inputs.yml) for the full catalogue. The most commonly tuned:
 - `required_data_event_bucket_arns` (default `[]`) — Theme 3.2 scope; empty skips with attestation rationale.
 - `cwl_retention_min_days` (default 365) — Theme 4.2 retention floor.
 - `trail_bucket_glacier_transition_days` (default 90) — Theme 5.3 lifecycle floor.
+- `c_ct_2_3_attestation_uri` (default `''`) — C-CT-2.3 workload-account fallback. When `organizations:ListAccounts` is unreachable, points `document_attestation` at the member-coverage review evidence (`s3://`/`https://`/`file://`); set it to lift the fallback from Skip to Pass-with-evidence (`c_ct_2_3_attestation_max_age_days` sets the staleness window, default 365).
 
 ## Custom resources
 
@@ -47,6 +48,7 @@ Under `libraries/`:
 - `aws_cloudtrail_insight_selectors.rb` — wraps `cloudtrail.get_insight_selectors` (not exposed by vendored inspec-aws).
 - `aws_organization_member_coverage.rb` — best-effort `organizations.list_accounts` enumeration with a `connection_error` accessor for the workload-account `AccessDenied` case (per `Vendored_Resource_Gaps.md` §5).
 - `aws_s3_bucket_features.rb` — composite resource exposing `object_lock_configuration`, `bucket_policy_doc`, `lifecycle_rules` (each from a separate SDK call) for the trail bucket; pairs with parsing helpers in `iam_policy_statement_helpers.rb`.
+- `document_attestation.rb` — source-agnostic existence + freshness accessor for an evidence document at a URI (`s3://`/`https://`/`file://`); lifts attestation fallbacks from Skip to Pass-with-evidence. Copied verbatim from `cis-aws-foundations` per `feedback_each_profile_stands_alone` (sparc-validate#115).
 
 ## Validation
 
