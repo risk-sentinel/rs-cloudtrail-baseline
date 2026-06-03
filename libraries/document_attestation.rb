@@ -41,16 +41,19 @@ class DocumentAttestation < Inspec.resource(1)
 
   attr_reader :uri, :scheme, :last_modified, :connection_error
 
-  def initialize(uri = nil, max_age_days: nil, region: nil)
+  # Positional opts hash — NOT keyword args. InSpec routes resource args through
+  # a *args splat, so under Ruby 3 `document_attestation(uri, max_age_days: 365)`
+  # arrives as `.new(uri, {max_age_days: 365})` (two positional args). A keyword
+  # signature rejects that with "wrong number of arguments (given 2, expected
+  # 0..1)" at exec. Accept (uri, opts) and a single hash form.
+  def initialize(uri = nil, opts = {})
     if uri.is_a?(Hash)
-      opts          = uri
-      uri           = opts[:uri]
-      max_age_days ||= opts[:max_age_days]
-      region       ||= opts[:region]
+      opts = uri
+      uri  = opts[:uri]
     end
     @uri              = uri.to_s
-    @max_age_days     = max_age_days
-    @region           = region || ENV["AWS_REGION"] || "us-east-1"
+    @max_age_days     = opts[:max_age_days]
+    @region           = opts[:region] || ENV["AWS_REGION"] || "us-east-1"
     @exists           = false
     @last_modified    = nil
     @connection_error = nil
