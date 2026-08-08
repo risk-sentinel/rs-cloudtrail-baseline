@@ -119,3 +119,7 @@ C-CT-2.3 is the only control with a conditional path: from a management account 
 - `docs/dev/Vendored_Resource_Gaps.md` — patterns for the custom resources here.
 - `docs/dev/Attestation_Strategy.md` — CMS-pattern attestation used by C-CT-2.3's fallback.
 - Issue: [#11](../../issues/11) — scoping comment + acceptance criteria.
+
+---
+
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=risk-sentinel_cis-cloudtrail)](https://sonarcloud.io/summary/new_code?id=risk-sentinel_cis-cloudtrail)
