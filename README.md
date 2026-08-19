@@ -1,125 +1,217 @@
-# cis-cloudtrail
+# rs-cloudtrail-baseline
 
-Tier-2 baseline for AWS CloudTrail covering surfaces beyond `cis-aws-foundations §4`. Targets AWS Commercial (`aws`) and AWS GovCloud non-DoD (`aws-us-gov`). Per-control partition applicability is documented in [`partition_applicability.yml`](partition_applicability.yml) and encoded as `tag applicable_partitions:`.
+InSpec / CINC Auditor profile validating **AWS CloudTrail** configuration and
+log-pipeline health — 15 controls across trail coverage, log-archive provenance,
+data-event recording, delivery health, and retention/lifecycle.
 
-Risk-Sentinel-attributed and consumer-agnostic, consistent with the rest of the `cis-*` profiles in this repo. The the consumer consumer overlay lives at [`examples/sparc.inputs.yml`](examples/sparc.inputs.yml). Renamed from `sparc-cloudtrail-baseline` (#11) to `cis-cloudtrail` (#77) before the v0.1.0 tag — the legacy name is gone, no shim.
+No CIS Benchmark covers CloudTrail as a subject in its own right. Controls are
+anchored to **NIST 800-53 r5** (AU family primarily), **AWS Foundational Security
+Best Practices**, and the AWS CloudTrail security best-practices guidance. The
+full derivation is in [`PROVENANCE.md`](PROVENANCE.md) — read it before adopting
+this as evidence, because a bespoke baseline is only as good as its stated basis.
 
-## Themes
-
-| Theme | Concern | Controls |
-|---|---|---|
-| 1 | Trail health (vs. just "trail exists") | C-CT-1.1 / 1.2 / 1.3 |
-| 2 | Multi-account aggregation | C-CT-2.1 / 2.2 / 2.3 |
-| 3 | Deeper event selectors | C-CT-3.1 / 3.2 / 3.3 |
-| 4 | CloudWatch Logs integration | C-CT-4.1 / 4.2 / 4.3 |
-| 5 | Trail-bucket tamper resistance | C-CT-5.1 / 5.2 / 5.3 |
-
-## Delineation from `cis-aws-foundations §4`
-
-`cis-aws-foundations §4` is the **CIS-baseline CloudTrail surface** — trail enabled, log file validation, KMS encryption of logs, S3 access logging on the trail bucket, S3 object-level read/write logging via the `aws_cloudtrail_event_selectors` custom resource (added by sparc-validate#20).
-
-`cis-cloudtrail` adds the surfaces CIS doesn't cover:
-
-- **§4 says trail is enabled.** This profile says the trail is *actually delivering events* (`IsLogging`, `LatestDeliveryTime`).
-- **§4 covers single-account trails.** This profile covers organization trails + log-archive bucket provenance.
-- **§4 covers S3 read/write data events.** This profile adds Lambda data events, S3 data event scoping to specific buckets, and Insight events.
-- **§4 covers KMS encryption + S3 access logging on the trail bucket.** This profile adds CloudWatch Logs integration health + trail bucket tamper resistance (Object Lock, TLS-deny, lifecycle).
-
-If you adopt this profile, run it **alongside** `cis-aws-foundations` — the two are designed to be additive. Foundations gives you the CIS-baseline coverage; this profile gives you the deeper FedRAMP-aligned controls.
-
-## Inputs
-
-See [`inputs.yml`](inputs.yml) for the full catalogue. The most commonly tuned:
-
-- `trail_delivery_recency_hours` (default 24h) — Theme 1.2 / 4.3 freshness threshold.
-- `approved_trail_buckets` (default `[]`) — Theme 2.2 log-archive allowlist; empty skips with attestation rationale.
-- `required_data_event_bucket_arns` (default `[]`) — Theme 3.2 scope; empty skips with attestation rationale.
-- `cwl_retention_min_days` (default 365) — Theme 4.2 retention floor.
-- `trail_bucket_glacier_transition_days` (default 90) — Theme 5.3 lifecycle floor.
-- `c_ct_2_3_attestation_uri` (default `''`) — C-CT-2.3 workload-account fallback. When `organizations:ListAccounts` is unreachable, points `document_attestation` at the member-coverage review evidence (`s3://`/`https://`/`file://`); set it to lift the fallback from Skip to Pass-with-evidence (`c_ct_2_3_attestation_max_age_days` sets the staleness window, default 365).
-
-## Custom resources
-
-Under `libraries/`:
-
-- `_aws_backend_bootstrap.rb` — vendored-inspec-aws `$LOAD_PATH` setup; required so `aws_backend` resolves at exec time. See `cis-aws-foundations/libraries/_aws_backend_bootstrap.rb` and sparc-validate#24.
-- `aws_cloudtrail_trail_status.rb` — wraps `cloudtrail.get_trail_status` for every trail; surfaces `is_logging`, `latest_delivery_time`, `latest_delivery_error`, `latest_digest_delivery_error`, `latest_cloud_watch_logs_delivery_time`, plus a top-level `unhealthy_trails` violations array.
-- `aws_cloudtrail_data_event_coverage.rb` — joins `describe_trails` × `get_event_selectors` to assert per-bucket / per-Lambda data event coverage with structured `missing_resources` violations.
-- `aws_cloudtrail_insight_selectors.rb` — wraps `cloudtrail.get_insight_selectors` (not exposed by vendored inspec-aws).
-- `aws_organization_member_coverage.rb` — best-effort `organizations.list_accounts` enumeration with a `connection_error` accessor for the workload-account `AccessDenied` case (per `Vendored_Resource_Gaps.md` §5).
-- `aws_s3_bucket_features.rb` — composite resource exposing `object_lock_configuration`, `bucket_policy_doc`, `lifecycle_rules` (each from a separate SDK call) for the trail bucket; pairs with parsing helpers in `iam_policy_statement_helpers.rb`.
-- `document_attestation.rb` — source-agnostic existence + freshness accessor for an evidence document at a URI (`s3://`/`https://`/`file://`); lifts attestation fallbacks from Skip to Pass-with-evidence. Copied verbatim from `cis-aws-foundations` per `feedback_each_profile_stands_alone` (sparc-validate#115).
-
-## Validation
-
-```bash
-# Syntax check
-docker run --rm -v "$PWD:/work" -w /work \
-  risksentinel/cinc-auditor@sha256:<digest-from-Image_Pinning_Policy.md> \
-  check profiles/cis-cloudtrail
-
-# Exec-time library load check (catches what `check` doesn't)
-docker run --rm -v "$PWD:/work" -w /work \
-  risksentinel/cinc-auditor@sha256:<digest> \
-  json profiles/cis-cloudtrail
-
-# Vendor before exec
-docker run --rm -v "$PWD:/work" -w /work \
-  risksentinel/cinc-auditor@sha256:<digest> \
-  vendor profiles/cis-cloudtrail --overwrite
-
-# Full execution
-docker run --rm \
-  -v "$PWD:/work" -w /work \
-  -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
-  -e AWS_REGION=us-east-1 \
-  risksentinel/cinc-auditor@sha256:<digest> \
-  exec profiles/cis-cloudtrail -t aws:// \
-  --input-file profiles/cis-cloudtrail/inputs.yml \
-  --reporter cli json:hdf.json
-```
-
-## Coverage distribution
-
-Final state (post-build):
-
-| Type | `implementation_status` | Count |
-|---|---|---|
-| Automated | `implemented` | 14 |
-| Attestation fallback | `alternative` | 1 (C-CT-2.3 when Organizations API unreachable) |
-| Pending | `planned` | 0 |
-
-C-CT-2.3 is the only control with a conditional path: from a management account it runs as automated; from a workload account `organizations:ListAccounts` returns `AccessDenied` and the control falls back to attestation rationale (CMS-pattern). The control body uses the connection-precheck pattern from `docs/dev/Vendored_Resource_Gaps.md` §5.
-
-`attestation_category` breakdown: 14 `operational` (engineering / SecOps reviews delivery health, event-selector scope, retention, lifecycle); 1 `policy` (C-CT-2.2 — bucket-allowlist provenance is a governance review).
-
-## Per-control map
-
-| Control | Theme | Status | Category | NIST | Resource(s) used |
-|---|---|---|---|---|---|
-| C-CT-1.1 | Trail health | implemented | operational | AU-12 | `aws_cloudtrail_trail_status` |
-| C-CT-1.2 | Trail health | implemented | operational | AU-12, AU-9 | `aws_cloudtrail_trail_status` |
-| C-CT-1.3 | Trail health | implemented | operational | AU-9, AU-10 | `aws_cloudtrail_trail_status` |
-| C-CT-2.1 | Multi-account | implemented | operational | AU-6 (3), AU-12 | `aws_cloudtrail_trail_status` |
-| C-CT-2.2 | Multi-account | implemented | policy | AU-9 (2) | `aws_cloudtrail_trail_status` |
-| C-CT-2.3 | Multi-account | alternative | policy | AU-6 (4) | `aws_organization_member_coverage` |
-| C-CT-3.1 | Event selectors | implemented | operational | AU-12, AU-2 | `aws_cloudtrail_data_event_coverage` |
-| C-CT-3.2 | Event selectors | implemented | operational | AU-12 (1), AC-3 | `aws_cloudtrail_data_event_coverage` |
-| C-CT-3.3 | Event selectors | implemented | operational | SI-4 (4), AU-6 | `aws_cloudtrail_insight_selectors` |
-| C-CT-4.1 | CWL integration | implemented | operational | AU-6 (1), SI-4 (5) | `aws_cloudtrail_trail_status` |
-| C-CT-4.2 | CWL integration | implemented | operational | AU-11 | `aws_cwl_log_group_retention` |
-| C-CT-4.3 | CWL integration | implemented | operational | AU-12, SI-4 | `aws_cloudtrail_trail_status` |
-| C-CT-5.1 | Bucket tamper resistance | implemented | operational | AU-9, AU-9 (2) | `aws_s3_bucket_features` |
-| C-CT-5.2 | Bucket tamper resistance | implemented | operational | SC-8, SC-13 | `aws_s3_bucket_features` |
-| C-CT-5.3 | Bucket tamper resistance | implemented | operational | AU-11, CP-9 | `aws_s3_bucket_features` |
-
-## Related
-
-- `docs/dev/Implementation_plan.md` — Phase 3 sequencing.
-- `docs/dev/Vendored_Resource_Gaps.md` — patterns for the custom resources here.
-- `docs/dev/Attestation_Strategy.md` — CMS-pattern attestation used by C-CT-2.3's fallback.
-- Issue: [#11](../../issues/11) — scoping comment + acceptance criteria.
+Targets **AWS Commercial** and **AWS GovCloud (non-DoD)**. Per-control partition
+applicability is in [`partition_applicability.yml`](partition_applicability.yml)
+and encoded as `tag applicable_partitions:`.
 
 ---
 
-[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=risk-sentinel_cis-cloudtrail)](https://sonarcloud.io/summary/new_code?id=risk-sentinel_cis-cloudtrail)
+## Quickstart
+
+```bash
+git clone https://github.com/risk-sentinel/rs-cloudtrail-baseline
+cd rs-cloudtrail-baseline
+
+cp inputs/example.yml inputs/mine.yml     # then edit — see Inputs below
+cinc-auditor vendor . --overwrite
+
+cinc-auditor exec . -t aws:// \
+  --input-file inputs/mine.yml \
+  --reporter cli json:results.json
+```
+
+`--input-file` is **not optional**. cinc-auditor does not auto-load a
+profile-root inputs file, and three controls here scope themselves out on an
+empty input — so leaving it off produces a quieter run, not a failing one.
+
+### Credentials
+
+Standard AWS credential resolution. Read-only across the trail pipeline:
+
+```
+cloudtrail:DescribeTrails  cloudtrail:GetTrailStatus  cloudtrail:GetEventSelectors
+s3:GetBucketPolicy  s3:GetBucketVersioning  s3:GetBucketLifecycleConfiguration
+s3:GetBucketPublicAccessBlock  s3:GetEncryptionConfiguration
+logs:DescribeLogGroups  logs:DescribeMetricFilters  kms:DescribeKey
+ec2:DescribeRegions       organizations:ListAccounts   (optional — see below)
+```
+
+`organizations:ListAccounts` is optional. Without it, organization-trail member
+coverage cannot be verified from a workload account, and
+`organizations_attestation_reference` is how you record that it is satisfied
+another way.
+
+### What a first run looks like
+
+Against a real account, with the allow-lists left empty:
+
+**15 controls, 16 results — roughly 8 passed / 6 failed / 2 skipped.**
+
+If you see far fewer, that is the signal to investigate. A run that assessed
+nothing exits 0 and looks clean.
+
+---
+
+## Inputs
+
+Fully documented in [`inputs/example.yml`](inputs/example.yml).
+
+| Group | Inputs |
+|---|---|
+| **Required** | `aws_partition` |
+| **Scoping** | `scan_regions` — empty means dynamic discovery; narrowing makes the scan faster **and blinder** |
+| **Thresholds** | `trail_delivery_recency_hours`, `cwl_retention_min_days`, `trail_bucket_glacier_transition_days` |
+| **Allow-lists** | `approved_trail_buckets`, `required_data_event_bucket_arns` |
+| **Attestation** | `organizations_attestation_reference`, `c_ct_2_3_attestation_uri`, the `*_base` URIs |
+
+**The two allow-lists are where controls go quiet.** `approved_trail_buckets`
+empty skips C-CT-2.2, and `required_data_event_bucket_arns` empty skips C-CT-3.2.
+Neither can be inferred — the profile cannot know your log-archive design, and
+guessing would be worse than declining to answer — so both skip with a rationale
+rather than passing. Populate them to actually enforce those controls.
+
+---
+
+## Controls
+
+15 controls in five themes:
+
+| Theme | Assesses |
+|---|---|
+| 1 — Coverage | a multi-region trail exists, is logging, and validates log-file integrity |
+| 2 — Provenance | the trail's destination bucket is approved, private, encrypted and versioned |
+| 3 — Data events | management events plus S3 data events for the buckets you name |
+| 4 — Delivery health | recent delivery to S3 and CloudWatch Logs, and CWL retention |
+| 5 — Retention | lifecycle transition to Glacier / Deep Archive within a threshold |
+
+---
+
+## Producing evidence
+
+A `--reporter cli` run tells you the answer. It does not produce something an
+assessor can trace back to what was assessed, when, by whom, or from which
+scanner output. For that, use the CI templates — the whole pipeline, in YAML
+with no helper scripts behind it:
+
+**GitHub**
+
+```yaml
+jobs:
+  evidence:
+    uses: risk-sentinel/rs-cloudtrail-baseline/.github/workflows/exec-evidence.yml@main
+    with:
+      target: my-account
+      profile_name: cis-cloudtrail
+      profile_version: "0.1.0"
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+```
+
+**GitLab**
+
+```yaml
+include:
+  - project: risk-sentinel/rs-cloudtrail-baseline
+    file: /ci/gitlab/exec-evidence.yml
+    inputs:
+      target: my-account
+      profile_name: cis-cloudtrail
+      profile_version: "0.1.0"
+```
+
+An `include:` brings YAML and nothing else, which is why the logic lives in the
+YAML rather than in a script an including project would never receive. The
+templates are carried in this repository on purpose: clone it or include it and
+you have the entire pipeline, with nothing else to install.
+
+### The order, and why it is that order
+
+```
+create passthrough -> execute -> convert (gate) -> apply -> label (gate)
+                   -> validate (gate) -> display
+```
+
+The audit record is built **before** the scan, because that is when the honest
+start time and the pipeline provenance are known. Only finish time, the artifact
+digest and the outcome counts are added afterwards.
+
+### Two artifacts
+
+| artifact | shape | for |
+|---|---|---|
+| `results.final.json` | HDF v3 `baselines[]` | authoritative evidence — schema-validated, carries the audit record and typed target components, feeds `hdf convert --to oscal-sar` |
+| `results-heimdall.json` | InSpec exec-json `profiles[]` | loading into Heimdall |
+
+The Heimdall artifact is a **copy, not a conversion**. Tested against a live
+Heimdall: every `profiles[]` variant loads, including the output of both
+`--to hdf@1` and `--to hdf@2`; only the `baselines[]` v3 document is refused. So
+the choice is fidelity, and every conversion path drops `resource_params` from
+each result plus `depends` / `status` / `status_message` from the profile.
+Copying what cinc-auditor already wrote loses nothing.
+
+**Do not reach for `hdf convert --to hdf@2`.** The `hdf@N` namespace was
+renumbered between hdf-libs 3.4.1 and 3.5.1 — on 3.4.1 it emits `baselines[]`,
+on 3.5.1 `profiles[]` — so a pipeline pinned to it silently changes artifact
+across an image bump. On 3.5.1, `@1` and `@2` are byte-identical.
+
+### Three gates, each of which has failed silently in this estate
+
+- `hdf convert` without `--no-validate`
+- `hdf label` followed by `hdf label show | grep '^Component:'` — `label set`
+  prints `Labels written` and writes a byte-identical file when the document has
+  no components
+- `hdf validate`
+
+The exec step additionally fails the job on a missing or **zero-result**
+artifact. A run that assessed nothing must not go green.
+
+### The audit record
+
+Written on every run — clean, failed, findings or none. Target, scan window,
+scanner, profile and version, pipeline provenance, actor, converter, a sha256 of
+the pre-conversion artifact, and outcome counts.
+
+Two properties are deliberate: **absent is not empty** (an inapplicable field is
+omitted, an undeterminable one is `null` with a reason), and the record **marks
+which fields are corroborable** against systems the producer does not control.
+An audit chain where every field is self-asserted is a story.
+
+Schema authority: [dev-sec-ops-baseline#33](https://github.com/risk-sentinel/dev-sec-ops-baseline/issues/33).
+
+---
+
+## Consuming this profile
+
+Depend on it rather than forking, so you get fixes:
+
+```yaml
+depends:
+  - name: cis-cloudtrail
+    git: https://github.com/risk-sentinel/rs-cloudtrail-baseline.git
+    tag: v0.1.4
+```
+
+Then `include_controls 'cis-cloudtrail'` and supply your own inputs. Input overrides
+reach the depended profile's controls, so your values win without editing
+anything here.
+
+## Contributing
+
+Control logic changes belong here. `cinc-auditor check` only *loads* a profile —
+it will not catch a resource that returns empty because an API call failed.
+Anything touching `libraries/` needs a real `exec` against a real target before
+it is trusted.
+
+## License
+
+Apache-2.0. See [LICENSE](LICENSE).

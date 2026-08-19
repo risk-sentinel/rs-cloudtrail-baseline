@@ -1,0 +1,87 @@
+# =============================================================================
+# rs-cloudtrail-baseline — reference inputs
+#
+#   cp inputs/example.yml inputs/mine.yml   # edit, then:
+#   cinc-auditor exec . -t aws:// --input-file inputs/mine.yml
+#
+# --input-file is NOT optional. cinc-auditor does not auto-load a profile-root
+# inputs file, and three of these controls scope themselves out when their input
+# is empty — so omitting it gives a quieter run rather than a failing one.
+#
+# Every input is listed with what an EMPTY or default value means, because in
+# this profile several defaults are deliberately permissive: they skip with an
+# attestation rationale rather than guessing at your log-archive design.
+# =============================================================================
+
+# ---- REQUIRED TO RUN --------------------------------------------------------
+
+# Which AWS partition is being scanned.
+#   aws         AWS Commercial
+#   aws-us-gov  AWS GovCloud (non-DoD)
+aws_partition: aws
+
+# ---- SCOPING ----------------------------------------------------------------
+
+# Region allowlist for region-scoped checks.
+# EMPTY = dynamic discovery, auto-narrowed to the partition.
+# Trade-off worth understanding: a narrow allowlist will NOT catch drift in the
+# regions you excluded. Narrowing makes the scan faster and blinder.
+scan_regions: []
+
+# ---- THRESHOLDS — tune to your environment ----------------------------------
+
+# Maximum age of LatestDeliveryTime / LatestCloudWatchLogsDeliveryTime for a
+# trail to count as healthy. Tighten for high-fidelity environments; loosen for
+# sandbox or dev accounts where activity is bursty and a quiet day is normal.
+trail_delivery_recency_hours: 24
+
+# Minimum CloudWatch Logs retention for the trail's log group.
+# AWS's "Never expire" is accepted regardless of this number.
+# Set to 0 to disable the floor and accept any positive retention.
+cwl_retention_min_days: 365
+
+# Maximum days before the trail bucket's lifecycle rule transitions objects to
+# GLACIER / GLACIER_IR / DEEP_ARCHIVE. The bucket must have at least one such
+# rule within this threshold.
+trail_bucket_glacier_transition_days: 90
+
+# ---- ALLOW-LISTS — empty means the control SKIPS, not passes -----------------
+#
+# These two are the inputs most likely to leave a control quietly unassessed.
+# The profile cannot infer your log-archive design, and guessing would be worse
+# than declining to answer — so it skips with a rationale instead.
+
+# S3 buckets approved as CloudTrail destinations (log-archive provenance).
+# EMPTY = C-CT-2.2 SKIPS. Populate with your centralized log-archive bucket
+# name(s) to actually enforce it.
+#   approved_trail_buckets: [my-org-log-archive]
+approved_trail_buckets: []
+
+# Bucket ARNs that must have S3 data events recorded by at least one trail.
+# EMPTY = C-CT-3.2 SKIPS. When populated, every listed ARN must be covered —
+# either by a per-bucket DataResource or by the 'arn:aws:s3:::' wildcard.
+#   required_data_event_bucket_arns: ['arn:aws:s3:::my-sensitive-bucket/']
+required_data_event_bucket_arns: []
+
+# ---- ATTESTATION — evidence for what no API can answer ----------------------
+
+# How organization-trail member coverage is satisfied when the scan runs from a
+# workload account that cannot call organizations:ListAccounts. A doc path, URL
+# or ticket ID. EMPTY = the control reports that it could not verify coverage.
+organizations_attestation_reference: ''
+
+# Base URI for leveraged-SYSTEM authorizations (FedRAMP / SOC 2 / ISO).
+leveraged_evidence_base: ''
+
+# Base URI for policy-PROVIDER documents your boundary leverages.
+policy_provider_base: ''
+
+# Base URI for your boundary's OWN governance documents.
+boundary_docs_base: ''
+
+# Direct URI override for the C-CT-2.3 attestation.
+# EMPTY = resolved from boundary_docs_base; if that is empty too, it skips.
+c_ct_2_3_attestation_uri: ''
+
+# How old that attestation may be before it stops counting as current.
+c_ct_2_3_attestation_max_age_days: 365

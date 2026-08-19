@@ -24,7 +24,7 @@ control 'C-CT-3.2' do
     aws cloudtrail put-event-selectors \\
       --trail-name <trail-arn> \\
       --event-selectors \\
-        '[{\"ReadWriteType\":\"All\",\"IncludeManagementEvents\":true,\"DataResources\":[{\"Type\":\"AWS::S3::Object\",\"Values\":[\"arn:aws:s3:::sparc-prod-evidence/\"]}]}]'
+        '[{\"ReadWriteType\":\"All\",\"IncludeManagementEvents\":true,\"DataResources\":[{\"Type\":\"AWS::S3::Object\",\"Values\":[\"arn:aws:s3:::example-log-archive/\"]}]}]'
     ```
   "
   tag severity:              'medium'
@@ -56,7 +56,7 @@ control 'C-CT-3.2' do
     describe 'S3 data event scoping (no required-bucket list)' do
       skip 'attestation-required: required_data_event_bucket_arns is empty — ' \
            'consumer attests separately to which buckets require object-level event logging. ' \
-           'Populate the input with bucket ARNs (e.g., arn:aws:s3:::sparc-prod-evidence) to enforce.'
+           'Populate the input with bucket ARNs (e.g., arn:aws:s3:::example-log-archive) to enforce.'
     end
   else
     describe aws_cloudtrail_data_event_coverage(regions: Array(input('scan_regions')),
