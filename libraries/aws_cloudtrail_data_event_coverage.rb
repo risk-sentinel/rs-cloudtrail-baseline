@@ -158,7 +158,7 @@ class AwsCloudtrailDataEventCoverage < AwsResourceBase
     @s3_bucket_arns_logged.any? do |logged|
       l = logged.to_s
       next true if l == target_arn
-      # An arn-prefix log entry like "arn:aws:s3:::sparc-prod" covers
+      # An arn-prefix log entry like "arn:aws:s3:::example-log-archive" covers
       # any object key under that bucket; the bucket itself is captured.
       next true if target_arn.start_with?(l) && (l.end_with?("/") || target_arn[l.length] == "/")
       false
