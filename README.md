@@ -1,6 +1,6 @@
 # rs-cloudtrail-baseline
 
-[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=risk-sentinel_cis-cloudtrail)](https://sonarcloud.io/summary/new_code?id=risk-sentinel_cis-cloudtrail)
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=risk-sentinel_rs-cloudtrail-baseline)](https://sonarcloud.io/summary/new_code?id=risk-sentinel_rs-cloudtrail-baseline)
 
 InSpec / CINC Auditor profile validating **AWS CloudTrail** configuration and
 log-pipeline health — 15 controls across trail coverage, log-archive provenance,
