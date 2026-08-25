@@ -52,14 +52,14 @@ control 'C-CT-2.3' do
     # organizations:ListAccounts is unreachable from this (workload) account.
     # The automated path above runs from the management account; here we lift
     # the fallback from a bare Skip to Pass-with-evidence via document_attestation
-    # (sparc-validate#115): assert the member-coverage review attestation exists
+    # — assert the member-coverage review attestation exists
     # and is current. If no attestation URI is configured we preserve the prior
     # Skip-with-rationale behavior so existing consumers aren't broken.
     # This member-coverage review is a `boundary`-class document (the boundary's
     # own periodic review). The URI defaults via attestation_uri(:boundary, …),
     # which resolves against boundary_docs_base and returns '' when that base is
     # unset — so an unconfigured consumer SKIPs (and can still `saf attest apply`
-    # downstream) rather than failing (sparc-validate#154). A per-control
+    # downstream) rather than failing. A per-control
     # override (c_ct_2_3_attestation_uri) still wins. Local var is `uri` to avoid
     # shadowing the attestation_uri helper method.
     uri          = input('c_ct_2_3_attestation_uri', value: attestation_uri(:boundary, 'C-CT-2.3'))
