@@ -22,8 +22,8 @@
 # this directory can inherit `AwsResourceBase` directly without any
 # explicit require of their own.
 #
-# Context: sparc-validate #24 (exec failure from PR #22 / #20 library
-# files). See also docs/dev/issue_20_design.md for the resource design.
+# Context: an exec-time failure where sibling library files could not resolve
+# AwsResourceBase, which this load-order shim fixes.
 
 vendor_patterns = [
   File.join(Dir.pwd, "vendor", "*", "libraries"),

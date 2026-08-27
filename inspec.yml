@@ -93,7 +93,7 @@ inputs:
       verbatim in C-CT-2.3's attestation skip rationale so auditors can
       trace the attestation source.
 
-  # ---- document_attestation evidence-class bases (sparc-validate#154) ----
+  # ---- document_attestation evidence-class bases ----
   # Three evidence classes, each with its own base location + a provider
   # inferred from the base's URI scheme. The per-profile helper
   # (_attestation_helpers.rb) composes attestation_uri(:class, 'name') ->
@@ -123,7 +123,7 @@ inputs:
       IRP, periodic-review records). Maps to boundary-specific controls
       (e.g. C-CT-2.3's member-coverage review).
 
-  # ---- per-control document_attestation override (sparc-validate#115/#154) ----
+  # ---- per-control document_attestation override ----
   - name: c_ct_2_3_attestation_uri
     type: string
     value: ''

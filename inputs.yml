@@ -6,8 +6,7 @@
 # or individually via --input name=value
 #
 # All inputs have sensible defaults — see inspec.yml for the catalogue
-# (types, defaults, per-value behaviour). Real consumer overlays exist
-# at `examples/sparc.inputs.yml` as a starting template.
+# (types, defaults, per-value behaviour).
 
 # ----- AWS partition -----
 # 'aws' for Commercial (default), 'aws-us-gov' for GovCloud non-DoD.
@@ -30,16 +29,16 @@ aws_partition: aws
 # Empty default skips C-CT-2.2 with attestation rationale. Populate with
 # the consumer's centralized log-archive bucket name(s) to enforce.
 # approved_trail_buckets:
-#   - sparc-prod-log-archive
-#   - sparc-prod-log-archive-replica
+#   - example-prod-log-archive
+#   - example-prod-log-archive-replica
 
 # ----- Theme 3.2 — required S3 data event bucket ARNs -----
 # Empty default skips C-CT-3.2 with attestation rationale. Populate with
 # the bucket ARNs whose object-level events MUST be captured by at least
 # one trail (either per-bucket DataResource or wildcard 'arn:aws:s3:::').
 # required_data_event_bucket_arns:
-#   - "arn:aws:s3:::sparc-prod-data"
-#   - "arn:aws:s3:::sparc-prod-evidence"
+#   - "arn:aws:s3:::example-prod-data"
+#   - "arn:aws:s3:::example-prod-evidence"
 
 # ----- Theme 4.2 — CWL retention floor -----
 # Minimum CloudWatch Logs log-group retention (days). Default 365.
