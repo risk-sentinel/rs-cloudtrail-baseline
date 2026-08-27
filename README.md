@@ -113,8 +113,11 @@ jobs:
     uses: risk-sentinel/rs-cloudtrail-baseline/.github/workflows/exec-evidence.yml@main
     with:
       target: my-account
+      boundary: my-boundary
+      aws_region: us-east-1
       profile_name: cis-cloudtrail
       profile_version: "0.1.0"
+      inputs_file: inputs/mine.yml
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 ```
@@ -124,12 +127,24 @@ jobs:
 ```yaml
 include:
   - project: risk-sentinel/rs-cloudtrail-baseline
+    ref: v0.1.6
     file: /ci/gitlab/exec-evidence.yml
     inputs:
       target: my-account
+      boundary: my-boundary
+      aws_region: us-east-1
       profile_name: cis-cloudtrail
       profile_version: "0.1.0"
+      inputs_file: inputs/mine.yml
 ```
+
+`target`, `boundary`, `aws_region`, `profile_name` and `profile_version` are
+required and have no defaults. A missing one is rejected before the job starts —
+GitHub refuses the `workflow_call`, GitLab refuses the `include` — rather than
+running against the wrong account or filing the results under the wrong label.
+`inputs_file` defaults to `inputs/example.yml`, which runs with example values,
+so set it to your own copy. See [docs/ci-templates.md](docs/ci-templates.md) for
+the full contract, including which secrets are genuinely optional.
 
 An `include:` brings YAML and nothing else, which is why the logic lives in the
 YAML rather than in a script an including project would never receive. The
