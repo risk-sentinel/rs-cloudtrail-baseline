@@ -40,7 +40,7 @@ which is precisely why this profile is not a CIS derivative.
 | | **CT-3.2** | S3 data events cover the consumer-supplied required-bucket-ARN list | AU-12 (1), AC-3 | FedRAMP | Data-plane access to sensitive buckets must be auditable, not just control-plane events. |
 | | **CT-3.3** | CloudTrail Insight events are enabled on ≥1 trail | SI-4 (4), AU-6 | FSBP (WA) | Behavioral anomaly detection over the API call stream (unusual write/error volumes). |
 | 4 · CWL integration | **CT-4.1** | Every trail forwards to CloudWatch Logs | AU-6 (1), SI-4 (5) | FedRAMP, FSBP | Real-time analysis/alerting requires the live CWL query layer, not just the S3 archive. |
-| | **CT-4.2** | CWL log groups meet the retention floor (default 365d) | AU-11 | **OMB M-21-31**, FedRAMP | Federal log-retention mandate; the live-query layer must cover the audit window (see issue #2 re: the 30-month total). |
+| | **CT-4.2** | CWL log groups meet the retention floor (default 365d) | AU-11 | **OMB M-21-31**, FedRAMP | Federal log-retention mandate; the live-query layer must cover the audit window (the 30-month total). |
 | | **CT-4.3** | CloudTrail→CWL delivery is recent and error-free | AU-12, SI-4 | FedRAMP | A broken CWL delivery silently defeats CT-4.1's real-time analysis. |
 | 5 · Bucket integrity | **CT-5.1** | Destination buckets have S3 Object Lock enabled | AU-9, AU-9 (2) | FedRAMP | Tamper-resistance: a compromised privileged role otherwise deletes the audit trail; **CIS does not cover this** — AU-9(2) is the canonical control. |
 | | **CT-5.2** | Bucket policy denies non-TLS PUT | SC-8, SC-13 | FedRAMP, FSBP | Evidence must be encrypted in transit to the archive. |
@@ -53,6 +53,5 @@ which is precisely why this profile is not a CIS derivative.
   cross-reference for OSCAL/Heimdall rollup.
 - **Attestation-backed:** CT-2.3 relies on a consumer-supplied account inventory
   (`organizations_attestation_reference`) where the API cannot enumerate authoritatively.
-- This document resolves **#1**. Keep it in sync when controls are added, removed, or re-anchored.
+- Keep it in sync when controls are added, removed, or re-anchored.
 
-_Closes #1._
