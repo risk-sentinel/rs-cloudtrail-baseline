@@ -30,6 +30,7 @@ control 'C-CT-3.2' do
   tag severity:              'medium'
   tag severity_source:       'unassessed'
   tag nist:                  ['AU-12 (1)', 'AC-3']
+  tag ksi:                   ['KSI-IAM-APM', 'KSI-IAM-ELP', 'KSI-IAM-JIT']
   tag nist_r4:               ['AC-3', 'AU-12(1)']
   tag cci:                   ['CCI-000173', 'CCI-000213']
   tag cis_number:            'CT-3.2'
