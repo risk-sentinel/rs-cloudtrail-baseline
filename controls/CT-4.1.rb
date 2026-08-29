@@ -31,7 +31,11 @@ control 'C-CT-4.1' do
     Ensure the role has the `CloudTrail_CloudWatchLogs_Role` permissions for `logs:CreateLogStream` and `logs:PutLogEvents` on the destination log group.
   "
   tag severity:              'medium'
+  tag severity_source:       'unassessed'
   tag nist:                  ['AU-6 (1)', 'SI-4 (5)']
+  tag ksi:                   ['KSI-INR-RIR', 'KSI-MLA-LET', 'KSI-MLA-OSM', 'KSI-MLA-RVL']
+  tag nist_r4:               ['AU-6(1)', 'SI-4(5)']
+  tag cci:                   ['CCI-001264', 'CCI-001864']
   tag cis_number:            'CT-4.1'
   tag cis_rid:               'CT-4.1'
   tag cis_benchmark:         'the consumer CloudTrail Baseline'

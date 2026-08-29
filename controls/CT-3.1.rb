@@ -29,7 +29,11 @@ control 'C-CT-3.1' do
     Note Lambda data events incur per-invocation logging cost; for large fleets, scope to specific function ARNs rather than the wildcard.
   "
   tag severity:              'medium'
+  tag severity_source:       'unassessed'
   tag nist:                  ['AU-12', 'AU-2']
+  tag ksi:                   ['KSI-CMT-LMC', 'KSI-MLA-LET', 'KSI-MLA-OSM', 'KSI-MLA-RVL']
+  tag nist_r4:               ['AU-12', 'AU-2']
+  tag cci:                   ['CCI-000123', 'CCI-000169']
   tag cis_number:            'CT-3.1'
   tag cis_rid:               'CT-3.1'
   tag cis_benchmark:         'the consumer CloudTrail Baseline'

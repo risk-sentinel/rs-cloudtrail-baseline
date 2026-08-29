@@ -40,7 +40,11 @@ control 'C-CT-5.2' do
     ```
   "
   tag severity:              'medium'
+  tag severity_source:       'unassessed'
   tag nist:                  ['SC-8', 'SC-13']
+  tag ksi:                   ['KSI-CNA-MAT', 'KSI-CNA-ULN', 'KSI-SVC-SIN', 'KSI-SVC-VRI']
+  tag nist_r4:               ['SC-13', 'SC-8']
+  tag cci:                   ['CCI-002418', 'CCI-002449']
   tag cis_number:            'CT-5.2'
   tag cis_rid:               'CT-5.2'
   tag cis_benchmark:         'the consumer CloudTrail Baseline'

@@ -30,7 +30,11 @@ control 'C-CT-2.1' do
     Or create a new organization trail with `aws cloudtrail create-trail --is-organization-trail --is-multi-region-trail`.
   "
   tag severity:              'high'
+  tag severity_source:       'assessed'
   tag nist:                  ['AU-6 (3)', 'AU-12']
+  tag ksi:                   ['KSI-MLA-LET', 'KSI-MLA-OSM']
+  tag nist_r4:               ['AU-12', 'AU-6(3)']
+  tag cci:                   ['CCI-000153', 'CCI-000169']
   tag cis_number:            'CT-2.1'
   tag cis_rid:               'CT-2.1'
   tag cis_benchmark:         'the consumer CloudTrail Baseline'
