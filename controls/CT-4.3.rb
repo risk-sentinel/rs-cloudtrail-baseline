@@ -26,6 +26,7 @@ control 'C-CT-4.3' do
     ```
   "
   tag severity:              'medium'
+  tag severity_source:       'unassessed'
   tag nist:                  ['AU-12', 'SI-4']
   tag cis_number:            'CT-4.3'
   tag cis_rid:               'CT-4.3'

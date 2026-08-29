@@ -29,6 +29,7 @@ control 'C-CT-1.3' do
     - Trail's log-file-validation flag was disabled then re-enabled mid-cycle (chain breaks)
   "
   tag severity:              'medium'
+  tag severity_source:       'unassessed'
   tag nist:                  ['AU-9', 'AU-10']
   tag cis_number:            'CT-1.3'
   tag cis_rid:               'CT-1.3'

@@ -24,6 +24,7 @@ control 'C-CT-2.3' do
     If the organization has no active accounts, onboard them per the AWS Organizations + Control Tower runbook. If the count is lower than expected, walk the OU tree to identify accounts not yet under the organization trail's scope.
   "
   tag severity:              'medium'
+  tag severity_source:       'unassessed'
   tag nist:                  ['AU-6 (4)']
   tag cis_number:            'CT-2.3'
   tag cis_rid:               'CT-2.3'

@@ -25,6 +25,7 @@ control 'C-CT-5.1' do
     Provision a new bucket with `--object-lock-enabled-for-bucket` at creation time, configure compliance- or governance-mode default retention, then update the trail to use the new bucket.
   "
   tag severity:              'high'
+  tag severity_source:       'assessed'
   tag nist:                  ['AU-9', 'AU-9 (2)']
   tag cis_number:            'CT-5.1'
   tag cis_rid:               'CT-5.1'

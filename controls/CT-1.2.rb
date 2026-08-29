@@ -27,6 +27,7 @@ control 'C-CT-1.2' do
     - `NoSuchBucket` → recreate bucket and re-point trail (or re-point trail to new bucket)
   "
   tag severity:              'high'
+  tag severity_source:       'assessed'
   tag nist:                  ['AU-12', 'AU-9']
   tag cis_number:            'CT-1.2'
   tag cis_rid:               'CT-1.2'

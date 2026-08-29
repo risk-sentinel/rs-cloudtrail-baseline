@@ -21,6 +21,7 @@ control 'C-CT-1.1' do
     Then investigate root cause: review CloudTrail event history for `StopLogging` calls, the principal that issued them, and whether the IAM policy permitting `cloudtrail:StopLogging` is intentional. CIS 5.4 (Stop / Start logging metric filter) provides the alerting tie-in.
   "
   tag severity:              'high'
+  tag severity_source:       'assessed'
   tag nist:                  ['AU-12']
   tag cis_number:            'CT-1.1'
   tag cis_rid:               'CT-1.1'
