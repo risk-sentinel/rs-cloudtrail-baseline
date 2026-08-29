@@ -32,6 +32,8 @@ control 'C-CT-2.1' do
   tag severity:              'high'
   tag severity_source:       'assessed'
   tag nist:                  ['AU-6 (3)', 'AU-12']
+  tag nist_r4:               ['AU-12', 'AU-6(3)']
+  tag cci:                   ['CCI-000153', 'CCI-000169']
   tag cis_number:            'CT-2.1'
   tag cis_rid:               'CT-2.1'
   tag cis_benchmark:         'the consumer CloudTrail Baseline'

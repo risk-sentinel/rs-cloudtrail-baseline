@@ -27,6 +27,8 @@ control 'C-CT-5.1' do
   tag severity:              'high'
   tag severity_source:       'assessed'
   tag nist:                  ['AU-9', 'AU-9 (2)']
+  tag nist_r4:               ['AU-9', 'AU-9(2)']
+  tag cci:                   ['CCI-000162', 'CCI-001348']
   tag cis_number:            'CT-5.1'
   tag cis_rid:               'CT-5.1'
   tag cis_benchmark:         'the consumer CloudTrail Baseline'

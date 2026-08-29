@@ -27,6 +27,8 @@ control 'C-CT-2.2' do
   tag severity:              'medium'
   tag severity_source:       'unassessed'
   tag nist:                  ['AU-9 (2)']
+  tag nist_r4:               ['AU-9(2)']
+  tag cci:                   ['CCI-001348']
   tag cis_number:            'CT-2.2'
   tag cis_rid:               'CT-2.2'
   tag cis_benchmark:         'the consumer CloudTrail Baseline'

@@ -28,6 +28,8 @@ control 'C-CT-4.3' do
   tag severity:              'medium'
   tag severity_source:       'unassessed'
   tag nist:                  ['AU-12', 'SI-4']
+  tag nist_r4:               ['AU-12', 'SI-4']
+  tag cci:                   ['CCI-000169', 'CCI-001253']
   tag cis_number:            'CT-4.3'
   tag cis_rid:               'CT-4.3'
   tag cis_benchmark:         'the consumer CloudTrail Baseline'
