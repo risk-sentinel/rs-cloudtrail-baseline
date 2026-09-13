@@ -19,7 +19,9 @@
 #     Organizations is a global service with a single endpoint; there is no
 #     per-region view to enumerate.
 #
-# Four resources here already enumerate regions correctly and are enforced.
+# Three resources here enumerate regions correctly and are enforced. A fourth,
+# aws_cwl_log_group_retention, is correct by a DIFFERENT route: it resolves the
+# region from the ARN it is given. That is target_derived, not blind.
 
 regions: [us-east-1, us-west-2, eu-west-1]
 
@@ -49,6 +51,13 @@ resources:
       payload: { trail_list: [] }
     status: enforced
 
+  # CORRECT, but not by sweeping. The caller supplies a log-group ARN, and an
+  # ARN already names its region — so this resource resolves the region from
+  # its input and queries exactly that one. Sweeping every region would be
+  # WRONG here: it would assess log groups the caller never asked about.
+  # The harness confirmed the behaviour by observing it query only the region
+  # named in the ARN below. Same shape as cis-rhel-9-baseline, which resolves
+  # region from the scan target via IMDS.
   - resource: aws_cwl_log_group_retention
     klass: AwsCwlLogGroupRetention
     args: { log_group_arn: "arn:aws:logs:us-east-1:000000000000:log-group:example" }
@@ -56,7 +65,8 @@ resources:
       service: cloudwatchlogs
       operation: describe_log_groups
       payload: { log_groups: [] }
-    status: enforced
+    status: target_derived
+    reason: "region comes from the supplied log-group ARN; sweeping would assess groups the caller did not ask about"
 
   # OPEN JUDGEMENT CALL, recorded rather than decided. S3 bucket names are
   # global and these calls succeed from any region, so this may be a false
