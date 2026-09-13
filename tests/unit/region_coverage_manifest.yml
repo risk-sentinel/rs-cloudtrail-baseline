@@ -1,0 +1,70 @@
+# Which custom resources must enumerate every enabled region, and how the
+# harness should construct and observe each one.
+#
+#   status - `enforced` must query every region and fails the build if it
+#            regresses. `known_blind` is reported without failing, so this
+#            harness can land before the fixes. `unobservable` means the walk
+#            cannot be seen through a stubbed client, requires a `reason`, and
+#            is NOT a defect.
+#   watch  - NEVER watch describe_regions: it is the one-off discovery call made
+#            against the default client and proves nothing about the walk.
+#            Two resources MAY share a service/operation — observations are
+#            keyed by that pair and cleared before each construction.
+#   args   - not optional in practice: a resource that iterates a caller-supplied
+#            list does no work without it and looks blind when it is not.
+#
+# DELIBERATELY NOT LISTED — global services. Region enumeration is meaningless
+# for these, and a future sweep should not "fix" them:
+#   aws_organization_member_coverage - Aws::Organizations::Client. AWS
+#     Organizations is a global service with a single endpoint; there is no
+#     per-region view to enumerate.
+#
+# Four resources here already enumerate regions correctly and are enforced.
+
+regions: [us-east-1, us-west-2, eu-west-1]
+
+resources:
+  - resource: aws_cloudtrail_data_event_coverage
+    klass: AwsCloudtrailDataEventCoverage
+    args: { required_s3_bucket_arns: [] }
+    watch:
+      service: cloudtrail
+      operation: describe_trails
+      payload: { trail_list: [] }
+    status: enforced
+
+  - resource: aws_cloudtrail_insight_selectors
+    klass: AwsCloudtrailInsightSelectors
+    watch:
+      service: cloudtrail
+      operation: describe_trails
+      payload: { trail_list: [] }
+    status: enforced
+
+  - resource: aws_cloudtrail_trail_status
+    klass: AwsCloudtrailTrailStatus
+    watch:
+      service: cloudtrail
+      operation: describe_trails
+      payload: { trail_list: [] }
+    status: enforced
+
+  - resource: aws_cwl_log_group_retention
+    klass: AwsCwlLogGroupRetention
+    args: { log_group_arn: "arn:aws:logs:us-east-1:000000000000:log-group:example" }
+    watch:
+      service: cloudwatchlogs
+      operation: describe_log_groups
+      payload: { log_groups: [] }
+    status: enforced
+
+  # OPEN JUDGEMENT CALL, recorded rather than decided. S3 bucket names are
+  # global and these calls succeed from any region, so this may be a false
+  # positive in the region-blind issue rather than a defect. Confirm against a
+  # real bucket outside the scanned region before "fixing" it: a needless sweep
+  # would add latency and could surface buckets outside the boundary.
+  - resource: aws_s3_bucket_features
+    klass: AwsS3BucketFeatures
+    args: { bucket_name: "example-bucket" }
+    watch: { service: s3, operation: get_bucket_policy }
+    status: known_blind
