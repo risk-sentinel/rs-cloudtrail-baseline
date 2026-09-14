@@ -12,6 +12,7 @@
 # Depends on `_aws_backend_bootstrap.rb` having loaded first.
 
 class AwsCwlLogGroupRetention < AwsResourceBase
+  include RegionScope
   name "aws_cwl_log_group_retention"
   desc "CloudWatch Logs log-group retention (resolves from trail's log-group ARN)."
   example "
@@ -62,8 +63,13 @@ class AwsCwlLogGroupRetention < AwsResourceBase
     return if @log_group_name.nil? || @log_group_name.empty? || @region.nil?
     catch_aws_errors do
       client = ::Aws::CloudWatchLogs::Client.new(region: @region)
-      resp = client.describe_log_groups(log_group_name_prefix: @log_group_name)
-      group = Array(resp.log_groups).find { |g| g.log_group_name == @log_group_name }
+      # Paginated. The prefix narrows the search but does not guarantee one page:
+      # several groups can share a prefix, and the EXACT match may sit past the
+      # first page. Taking only page one would report "log group not found",
+      # which a control reads as an absent group rather than a truncated answer.
+      group = paginate_all(args: { log_group_name_prefix: @log_group_name }) { |a| client.describe_log_groups(a) }
+              .flat_map { |r| Array(r.log_groups) }
+              .find { |g| g.log_group_name == @log_group_name }
       if group
         @exists = true
         @retention_days = group.retention_in_days
