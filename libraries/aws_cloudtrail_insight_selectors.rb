@@ -10,6 +10,7 @@
 # Depends on `_aws_backend_bootstrap.rb` having loaded first.
 
 class AwsCloudtrailInsightSelectors < AwsResourceBase
+  include RegionScope
   name "aws_cloudtrail_insight_selectors"
   desc "Per-trail insight-event selector enumeration."
   example "
@@ -18,14 +19,14 @@ class AwsCloudtrailInsightSelectors < AwsResourceBase
     end
   "
 
-  attr_reader :rows
+  attr_reader :rows, :connection_error
 
   def initialize(opts = {})
     opts = opts.dup
     region_override = Array(opts.delete(:regions))
     super(opts)
     validate_parameters
-    @all_regions = region_override.empty? ? fetch_default_regions : region_override
+    @all_regions = region_scope_or_fail!(@aws, region_override)
     @rows = fetch_data
   end
 
@@ -91,11 +92,4 @@ class AwsCloudtrailInsightSelectors < AwsResourceBase
     []
   end
 
-  def fetch_default_regions
-    regions = []
-    catch_aws_errors do
-      regions = @aws.compute_client.describe_regions.regions.map(&:region_name)
-    end
-    regions
-  end
 end
