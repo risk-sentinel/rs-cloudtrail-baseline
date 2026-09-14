@@ -17,6 +17,7 @@
 # Context: docs/dev/Vendored_Resource_Gaps.md.
 
 class AwsCloudtrailTrailStatus < AwsResourceBase
+  include RegionScope
   name "aws_cloudtrail_trail_status"
   desc "Per-trail get_trail_status fields (is_logging, delivery times, errors)."
   example "
@@ -28,7 +29,7 @@ class AwsCloudtrailTrailStatus < AwsResourceBase
     end
   "
 
-  attr_reader :table
+  attr_reader :table, :connection_error
 
   FilterTable.create
     .register_column(:trail_arns,                              field: :trail_arn)
@@ -50,7 +51,7 @@ class AwsCloudtrailTrailStatus < AwsResourceBase
     @recency_seconds = (opts.delete(:delivery_recency_hours) || 24).to_i * 3600
     super(opts)
     validate_parameters
-    @all_regions = region_override.empty? ? fetch_default_regions : region_override
+    @all_regions = region_scope_or_fail!(@aws, region_override)
     @table = fetch_data
   end
 
@@ -180,11 +181,4 @@ class AwsCloudtrailTrailStatus < AwsResourceBase
     nil
   end
 
-  def fetch_default_regions
-    regions = []
-    catch_aws_errors do
-      regions = @aws.compute_client.describe_regions.regions.map(&:region_name)
-    end
-    regions
-  end
 end

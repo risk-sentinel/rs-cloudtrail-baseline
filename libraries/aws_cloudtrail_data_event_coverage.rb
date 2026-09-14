@@ -14,6 +14,7 @@
 # Depends on `_aws_backend_bootstrap.rb` having loaded first.
 
 class AwsCloudtrailDataEventCoverage < AwsResourceBase
+  include RegionScope
   name "aws_cloudtrail_data_event_coverage"
   desc "Cross-trail data-event coverage joining describe_trails × get_event_selectors."
   example "
@@ -33,7 +34,7 @@ class AwsCloudtrailDataEventCoverage < AwsResourceBase
   S3_WILDCARDS = %w[arn:aws:s3 arn:aws-us-gov:s3 arn:aws:s3:::].freeze
   LAMBDA_WILDCARDS = %w[arn:aws:lambda arn:aws-us-gov:lambda].freeze
 
-  attr_reader :s3_bucket_arns_logged, :lambda_arns_logged
+  attr_reader :s3_bucket_arns_logged, :lambda_arns_logged, :connection_error
 
   def initialize(opts = {})
     opts = opts.dup
@@ -41,7 +42,7 @@ class AwsCloudtrailDataEventCoverage < AwsResourceBase
     @required_s3_bucket_arns = Array(opts.delete(:required_s3_bucket_arns)).map(&:to_s)
     super(opts)
     validate_parameters
-    @all_regions = region_override.empty? ? fetch_default_regions : region_override
+    @all_regions = region_scope_or_fail!(@aws, region_override)
     fetch_data
   end
 
@@ -165,11 +166,4 @@ class AwsCloudtrailDataEventCoverage < AwsResourceBase
     end
   end
 
-  def fetch_default_regions
-    regions = []
-    catch_aws_errors do
-      regions = @aws.compute_client.describe_regions.regions.map(&:region_name)
-    end
-    regions
-  end
 end
