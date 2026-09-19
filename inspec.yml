@@ -145,5 +145,4 @@ supports:
 depends:
   - name: inspec-aws
     git: https://github.com/inspec/inspec-aws.git
-    branch: main
-    # TODO: pin to a tag after first green CI run.
+    tag: v1.83.63
