@@ -98,6 +98,76 @@ rather than passing. Populate them to actually enforce those controls.
 
 ---
 
+## Running without GitHub access
+
+Every release carries a `.tar.gz` asset, built and verified by
+`.github/workflows/release-artifact.yml`.
+
+It holds this profile **and its vendored dependencies**, so running it
+contacts no remote at all — the shape for a consumer who can reach their own
+accounts or hosts but cannot reach github.com.
+
+Assets are attached to every release cut **after this workflow landed**; earlier
+releases have none.
+
+```bash
+VERSION=<the release you want>
+
+# once, from somewhere that CAN reach GitHub
+curl -LO https://github.com/risk-sentinel/rs-cloudtrail-baseline/releases/download/$VERSION/cis-cloudtrail-$VERSION.tar.gz
+
+# then, on the isolated side
+mkdir -p cis-cloudtrail && tar xzf cis-cloudtrail-$VERSION.tar.gz -C cis-cloudtrail
+cd cis-cloudtrail
+cinc-auditor exec . -t aws:// --input-file inputs/example.yml
+```
+
+**Extract it, then run from inside the directory.** Executing the `.tar.gz` path
+directly fails with `cannot load such file -- aws_backend`, because
+`libraries/_aws_backend_bootstrap.rb` locates the vendored pack by globbing
+`Dir.pwd` and an archive exec unpacks somewhere else.
+
+The asset is verified before it is attached: the release job rejects an archive
+that declares `depends:` but carries no `vendor/`, and it rejects one that will
+not **load with the network switched off**. A tarball that exists is not a
+tarball that works.
+
+### From CI
+
+Both templates take `profile_source`, defaulting to `git` — existing callers are
+unaffected:
+
+| value | behaviour |
+| --- | --- |
+| `git` | Vendor from the declared remotes. Needs to reach them. |
+| `archive` | Unpack a release artifact. Contacts no remote. Requires `archive_path`. |
+
+`archive` **never falls back to `git`.** An empty or missing `archive_path` fails
+the job, as does an archive that declares dependencies but carries none. A
+fallback would defeat the isolation the mode exists for *and* still report a
+successful scan.
+
+GitHub Actions:
+
+```yaml
+uses: risk-sentinel/rs-cloudtrail-baseline/.github/workflows/exec-evidence.yml@<version>
+with:
+  profile_source: archive
+  archive_path: ./cis-cloudtrail-<version>.tar.gz
+```
+
+GitLab:
+
+```yaml
+include:
+  - project: <your-org>/rs-cloudtrail-baseline
+    ref: <version>
+    file: /ci/jobs/exec-evidence.yml
+    inputs:
+      profile_source: archive
+      archive_path: ./cis-cloudtrail-<version>.tar.gz
+```
+
 ## Producing evidence
 
 A `--reporter cli` run tells you the answer. It does not produce something an
