@@ -30,10 +30,9 @@ control 'C-CT-1.3' do
   "
   tag severity:              'medium'
   tag severity_source:       'unassessed'
-  tag nist:                  ['AU-9', 'AU-10']
-  tag ksi:                   ['KSI-MLA-OSM']
-  tag nist_r4:               ['AU-10', 'AU-9']
-  tag cci:                   ['CCI-000162', 'CCI-000166']
+  tag nist:                  ['AU-9 (3)', 'AU-10']
+  tag nist_r4:               ['AU-10', 'AU-9 (3)']
+  tag cci:                   ['CCI-001350', 'CCI-000166']
   tag cis_number:            'CT-1.3'
   tag cis_rid:               'CT-1.3'
   tag cis_benchmark:         'the consumer CloudTrail Baseline'
