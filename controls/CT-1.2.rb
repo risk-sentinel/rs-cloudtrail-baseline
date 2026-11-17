@@ -28,10 +28,10 @@ control 'C-CT-1.2' do
   "
   tag severity:              'high'
   tag severity_source:       'assessed'
-  tag nist:                  ['AU-12', 'AU-9']
-  tag ksi:                   ['KSI-MLA-LET', 'KSI-MLA-OSM']
-  tag nist_r4:               ['AU-12', 'AU-9']
-  tag cci:                   ['CCI-000162', 'CCI-000169']
+  tag nist:                  ['AU-12 c']
+  tag ksi:                   ['KSI-MLA-LET']
+  tag nist_r4:               ['AU-12 c']
+  tag cci:                   ['CCI-000172']
   tag cis_number:            'CT-1.2'
   tag cis_rid:               'CT-1.2'
   tag cis_benchmark:         'the consumer CloudTrail Baseline'

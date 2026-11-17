@@ -27,10 +27,10 @@ control 'C-CT-4.3' do
   "
   tag severity:              'medium'
   tag severity_source:       'unassessed'
-  tag nist:                  ['AU-12', 'SI-4']
-  tag ksi:                   ['KSI-MLA-LET', 'KSI-MLA-RVL', 'KSI-SVC-EIS']
-  tag nist_r4:               ['AU-12', 'SI-4']
-  tag cci:                   ['CCI-000169', 'CCI-001253']
+  tag nist:                  ['SI-4 c 1']
+  tag ksi:                   ['KSI-MLA-RVL', 'KSI-SVC-EIS']
+  tag nist_r4:               ['SI-4 c']
+  tag cci:                   ['CCI-001255']
   tag cis_number:            'CT-4.3'
   tag cis_rid:               'CT-4.3'
   tag cis_benchmark:         'the consumer CloudTrail Baseline'
